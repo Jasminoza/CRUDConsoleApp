@@ -21,8 +21,14 @@ public class DeveloperView {
         String firstname = scanner.nextLine();
         System.out.println("Enter developer's last name: ");
         String lastname = scanner.nextLine();
-        System.out.println("Enter id of skill you want to add: ");
-        List<Skill> skills = addSkillsToList();
+        List<Skill> skills = new ArrayList<>();
+        if (skillController.getAllSkills() != null && skillController.getAllSkills().size() == 0) {
+            System.out.println("Please, add some skills to skills list first, its empty.");
+        } else {
+            Map<Long, Skill> chosenSkills = new HashMap<>();
+            showAllSkills();
+            skills = addSkillsToList(chosenSkills);
+        }
         System.out.println("Enter id of specialty you want to add: ");
         Specialty specialty = chooseSpecialty();
         Status status = Status.ACTIVE;
@@ -42,40 +48,35 @@ public class DeveloperView {
 
     }
 
-    private List<Skill> addSkillsToList() {
-        if (skillController.getAllSkills().size() == 0) {
-            System.out.println("Please, add some skills to skills list first, its empty.");
-            return null;
-        } else {
-            boolean choiceIsOver = false;
-            HashMap<Long, Skill> chosenSkills = new HashMap<>();
-            showAllSkills();
+    private List<Skill> addSkillsToList( Map<Long, Skill> chosenSkills) {
+        System.out.println("Enter id of skill you want to add: ");
+        return addSkills(chosenSkills);
+    }
 
-            while (!choiceIsOver) {
-                System.out.println("Please, enter id number of skill you want to add: ");
-                while (true)
-                    try {
-                        Long id = Long.parseLong(scanner.nextLine());
-                        if (skillController.getById(id) == null) {
-                            System.out.println("There is no skill with such id. Please, try again.");
-                        } else {
-                            if (!chosenSkills.containsKey(id)) {
-                                chosenSkills.put(id, skillController.getById(id));
-                            } else {
-                                System.out.println("Chosen skill is already selected.");
-                            }
-                            System.out.println("Do you want to add another skill? (y/n)");
-                            String answer = scanner.nextLine();
-                            if (answer.equalsIgnoreCase("no") || answer.equalsIgnoreCase("n")) {
-                                choiceIsOver = true;
-                            }
-                            break;
-                        }
-                    } catch (NumberFormatException e) {
-                        System.out.println("Please, enter correct id.");
-                    }
+    private List<Skill> addSkills(Map<Long, Skill> chosenSkills) {
+        try {
+            Long id = Long.parseLong(scanner.nextLine());
+            if (skillController.getById(id) == null) {
+                System.out.println("There is no skill with such id. Please, try again.");
+            } else {
+                addSkillsToMapIfNotExist(chosenSkills, id);
+                System.out.println("Do you want to add another skill? (y/n)");
+                String answer = scanner.nextLine();
+                if (answer.equalsIgnoreCase("no") || answer.equalsIgnoreCase("n")) {
+                    return chosenSkills.values().stream().toList();
+                }
             }
-            return chosenSkills.values().stream().toList();
+        } catch (NumberFormatException e) {
+            System.out.println("Input incorrect");
+        }
+        return addSkillsToList(chosenSkills);
+    }
+
+    private void addSkillsToMapIfNotExist(Map<Long, Skill> chosenSkills, Long id) {
+        if (!chosenSkills.containsKey(id)) {
+            chosenSkills.put(id, skillController.getById(id));
+        } else {
+            System.out.println("Chosen skill is already selected.");
         }
     }
 
